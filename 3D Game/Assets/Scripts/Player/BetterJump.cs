@@ -24,6 +24,8 @@ public class BetterJump : MonoBehaviour
         CustomGravity = Player.GetComponent<CustomGravity>();
     }
 
+    // other "Better Jump" method. I don't see a reason to use it.
+
     //    void FixedUpdate()
     //    {
     //        if (rb.velocity.y < 0)
@@ -37,7 +39,7 @@ public class BetterJump : MonoBehaviour
     //    }
 
 
-        // Replace gravityScale (used for the 2d engine) with my own gravity scaling script
+        // Replace gravityScale (used for the 2d engine) with my own gravity scaling script (did it)
     void FixedUpdate()
     {
         // States that the "localVelocity" Vector3 is the player's current local velocity

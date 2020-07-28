@@ -6,8 +6,8 @@ public class JumpBox : MonoBehaviour
 {
     [Range(1, 10)]
     public float jumpVelocity;
-    public float groundedSkin = 0.05f;
-    public LayerMask mask;
+    //public float groundedSkin = 0.05f;
+    //public LayerMask mask;
 
     bool jumpRequest;
     bool grounded;
@@ -18,7 +18,14 @@ public class JumpBox : MonoBehaviour
     float playerWidth;
     float playerLength;
 
-    Vector3 boxSize;
+    //Vector3 boxSize;
+
+
+    // New Ground Check Variables
+    public Transform groundCheck;
+    public float sphereSize = 0.4f;
+    public LayerMask groundMask;
+    //
 
     void Awake()
     {
@@ -27,11 +34,15 @@ public class JumpBox : MonoBehaviour
         playerLength = GetComponent<CapsuleCollider>().radius * 2;
 
         playerSize.Set(playerWidth, playerHeight, playerLength);
-        boxSize.Set(playerSize.x, groundedSkin, playerSize.z);
+        //boxSize.Set(playerSize.x, groundedSkin, playerSize.z);
     }
 
     void Update()
     {
+        // Sphere Ground Check
+        grounded = Physics.CheckSphere(groundCheck.position, sphereSize, groundMask);
+        //
+
         if (Input.GetButtonDown ("Jump") && grounded)
         {
             jumpRequest = true;
@@ -51,8 +62,9 @@ public class JumpBox : MonoBehaviour
         }
         else
         {
-            Vector3 boxCenter = (Vector3)transform.position + Vector3.down * (playerSize.y + boxSize.y) * 0.5f;
-            grounded = (Physics.OverlapBox (boxCenter, boxSize, Quaternion.identity, mask) != null);
+            // box method
+            //Vector3 boxCenter = (Vector3)transform.position + Vector3.down * (playerSize.y + boxSize.y) * 0.5f;
+            //grounded = (Physics.OverlapBox (boxCenter, boxSize, Quaternion.identity, mask) != null);
         }
     }
 }
