@@ -44,25 +44,25 @@ public class TutorialPlayer : MonoBehaviour
         // States that "PlanetScript" is the "Planet" class from the Planet script
         PlanetScript = Planet.GetComponent<Planet>();
 
-        //MOVEMENT
+        //MOVEMENT (not using)
 
-        float x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
-        float z = Input.GetAxis("Vertical") * Time.deltaTime * speed;
+        //float x = Input.GetAxis("Horizontal") * Time.deltaTime * speed;
+        //float z = Input.GetAxis("Vertical") * Time.deltaTime * speed;
 
-        transform.Translate(x, 0, z);
+        //transform.Translate(x, 0, z);
 
-        //Local Rotation
+        //Local Rotation (not using)
 
-        if (Input.GetKey(KeyCode.E))
-        {
-
-            transform.Rotate(0, 150 * Time.deltaTime, 0);
-        }
-        if (Input.GetKey(KeyCode.Q))
-        {
-
-            transform.Rotate(0, -150 * Time.deltaTime, 0);
-        }
+        //if (Input.GetKey(KeyCode.E))
+        //{
+        //
+        //    transform.Rotate(0, 150 * Time.deltaTime, 0);
+        //}
+        //if (Input.GetKey(KeyCode.Q))
+        //{
+        //
+        //    transform.Rotate(0, -150 * Time.deltaTime, 0);
+        //}
 
         //Jump
 

@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class CustomMovement : MonoBehaviour
 {
-    public CharacterController controller;
+    // I don't want to mess with character controllers. those things are bad.
+    // public CharacterController controller;
     public Transform cam;
     // reference the Main Camera, not the Cinemachine one
 
@@ -29,19 +30,23 @@ public class CustomMovement : MonoBehaviour
 
         if(inputDirection.magnitude >= 0.1f)
         {
-            // gets angle to rotate the player by
+            // gets angle to rotate the player by (I think this parts ok)
             //float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg; (this commented out code would be used if camera didn't influence player's rotation)
+            //changed cam.eulerAngles.y to cam.eulerAngles
             float targetAngle = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
             // smoothes the angle the player rotates at to make it less snappy
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+
             // rotates the character to the target angle
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            //changed "transform.rotation = Quaternion.Euler(0f, angle, 0f);" to "transform.rotation = transform.rotation * Quaternion.Euler(0f, angle, 0f);"
+            transform.rotation = transform.rotation * Quaternion.Euler(0f, angle, 0f);
 
             // uses camera direction to influence movement
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             //
             //controller.Move(inputDirection * speed * Time.deltaTime); (inputDirection for cam-independent movement, moveDir.normalized for cam-dependent)
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            //controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            transform.Translate(moveDir.normalized * speed * Time.deltaTime);
         }
     }
 }
