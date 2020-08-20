@@ -8,6 +8,8 @@ public class TutorialPlayer : MonoBehaviour
     public GameObject Planet;
     public GameObject PlayerPlaceholder;
 
+    public GameObject GroundCheck;
+
 
     public float speed = 4;
     //public float JumpHeight = 1.2f;
@@ -37,12 +39,18 @@ public class TutorialPlayer : MonoBehaviour
     // Adds the "Planet" class into this script's scope (?) (its basically initializing the "PlanetScript")
     private Planet PlanetScript;
 
+    // initializes "FlatGravity"
+    private FlatGravity FlatGravity;
+
     // Update is called once per frame
     void Update()
     {
 
         // States that "PlanetScript" is the "Planet" class from the Planet script
         PlanetScript = Planet.GetComponent<Planet>();
+
+        // States that "FlatGravity" is the "FlatGravity" class from the FlatGravity script
+        FlatGravity = Planet.GetComponent<FlatGravity>();
 
         //MOVEMENT
 
@@ -98,15 +106,36 @@ public class TutorialPlayer : MonoBehaviour
 
         //GRAVITY and ROTATION
 
-        Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
-
-        if (OnGround == false)
+        // Tests if the current planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
+        if (Planet.GetComponent<FlatGravity>() != null)
         {
-            // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
-            rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
+            // use flat gravity
 
+            Vector3 PlayerY = new Vector3(0f, Planet.transform.localPosition.y, 0f);
+            // I'm subtracting the y component of the players position from the players position to get a direction. Maybe multiply PlayerY?
+            // I mutiply PlayerY by 2 so I'm not just removing the y component; I'm making it lower.
+            Vector3 gravDirection = (PlayerY * 2).normalized;
+
+            if (OnGround == false)
+            {
+                // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
+                rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
+
+            }
         }
+        else
+        {
+            // use planet gravity
 
+            Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+
+            if (OnGround == false)
+            {
+                // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
+                rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
+
+            }
+        }
         //
 
         Quaternion toRotation = Quaternion.FromToRotation(transform.up, Groundnormal) * transform.rotation;
@@ -123,22 +152,50 @@ public class TutorialPlayer : MonoBehaviour
     {
         if (collision.transform != Planet.transform)
         {
+            // Tests if the new planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
+            if (collision.GetComponent<FlatGravity>() != null)
+            {
+                // use flat gravity
 
-            Planet = collision.transform.gameObject;
+                Planet = collision.transform.gameObject;
 
-            Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+                Vector3 PlayerY = new Vector3(0f, Planet.transform.localPosition.y, 0f);
+                // I'm subtracting the y component of the players position from the players position to get a direction. Maybe multiply PlayerY?
+                // I mutiply PlayerY by 2 so I'm not just removing the y component; I'm making it lower.
+                Vector3 gravDirection = (PlayerY * 2).normalized;
 
-            Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
-            transform.rotation = toRotation;
+                Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
+                transform.rotation = toRotation;
 
-            rb.velocity = Vector3.zero;
+                rb.velocity = Vector3.zero;
 
-            // I believe that PlanetScript.PlanetGravity needs to be reversed now (by the - symbol) because it is flinging the player up, towards the new planet
-            // I added the gravityScale multiplier because i thought it made sense. keep an eye on it in case problems with planet changing occur
-            rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
+                // I believe that PlanetScript.PlanetGravity needs to be reversed now (by the - symbol) because it is flinging the player up, towards the new planet
+                // I added the gravityScale multiplier because i thought it made sense. keep an eye on it in case problems with planet changing occur
+                rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
 
 
-            PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+                PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+            }
+            else
+            {
+                // use planet gravity
+
+                Planet = collision.transform.gameObject;
+
+                Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+
+                Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
+                transform.rotation = toRotation;
+
+                rb.velocity = Vector3.zero;
+
+                // I believe that PlanetScript.PlanetGravity needs to be reversed now (by the - symbol) because it is flinging the player up, towards the new planet
+                // I added the gravityScale multiplier because i thought it made sense. keep an eye on it in case problems with planet changing occur
+                rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
+
+
+                PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+            }
 
         }
     }
