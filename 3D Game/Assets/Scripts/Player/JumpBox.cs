@@ -55,6 +55,8 @@ public class JumpBox : MonoBehaviour
         {
             //GetComponent<Rigidbody>().velocity += Vector3.up * jumpVelocity;
             // I switched from Vector3.up to transform.up
+
+            // Use a custom AddForceToReachVelocity function, to prevent any oddities.
             GetComponent<Rigidbody>().AddForce(transform.up * jumpVelocity, ForceMode.Impulse);
 
             jumpRequest = false;

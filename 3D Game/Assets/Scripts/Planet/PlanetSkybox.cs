@@ -25,7 +25,8 @@ public class PlanetSkybox : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        this.transform.localScale = transform.parent.transform.localScale * 2.375f;
+        // I used to have this multiplied by 2.375f instead, but there was some clipping out of simulation on smaller planets.
+        this.transform.localScale = transform.parent.transform.localScale * 2.5f;
         renderer = GetComponent<Renderer>();
 
         // states that the PlayerScript is the TutorialPlayer script on the Player GameObject

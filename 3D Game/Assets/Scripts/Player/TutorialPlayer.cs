@@ -111,10 +111,10 @@ public class TutorialPlayer : MonoBehaviour
         {
             // use flat gravity
 
-            Vector3 PlayerY = new Vector3(0f, Planet.transform.localPosition.y, 0f);
-            // I'm subtracting the y component of the players position from the players position to get a direction. Maybe multiply PlayerY?
-            // I mutiply PlayerY by 2 so I'm not just removing the y component; I'm making it lower.
-            Vector3 gravDirection = (PlayerY * 2).normalized;
+            //Vector3 PlayerY = Planet.transform.localRotation.eulerAngles;
+
+            //Vector3 gravDirection = Planet.transform.localRotation.eulerAngles;
+            Vector3 gravDirection = transform.up.normalized;
 
             if (OnGround == false)
             {
@@ -135,11 +135,16 @@ public class TutorialPlayer : MonoBehaviour
                 rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
 
             }
+
+            // Set player rotation to have feet facing the planet center here
+            //
+            //
         }
         //
 
-        Quaternion toRotation = Quaternion.FromToRotation(transform.up, Groundnormal) * transform.rotation;
-        transform.rotation = toRotation;
+        // This code alligns the player to the normal below them. I don't want this, so I commented it out.
+        //Quaternion toRotation = Quaternion.FromToRotation(transform.up, Groundnormal) * transform.rotation;
+        //transform.rotation = toRotation;
 
 
 
@@ -159,19 +164,42 @@ public class TutorialPlayer : MonoBehaviour
 
                 Planet = collision.transform.gameObject;
 
-                Vector3 PlayerY = new Vector3(0f, Planet.transform.localPosition.y, 0f);
-                // I'm subtracting the y component of the players position from the players position to get a direction. Maybe multiply PlayerY?
-                // I mutiply PlayerY by 2 so I'm not just removing the y component; I'm making it lower.
-                Vector3 gravDirection = (PlayerY * 2).normalized;
+                //Vector3 PlayerY = Planet.transform.localRotation.eulerAngles;
 
-                Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
-                transform.rotation = toRotation;
+                //Vector3 gravDirection = Planet.transform.localRotation.eulerAngles;
+                Vector3 gravDirection = transform.up.normalized;
 
+                // Again, I don't want to allign the player to the thing below them; I want to allign them to the planet / surface rotation.
+                //Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
+                //transform.rotation = toRotation;
+
+                // alligns player to surface of flat thing
+                //
+
+                // takes player's world rotation and converts it to local
+                Vector3 PlayerRot = transform.rotation.eulerAngles;
+                transform.InverseTransformDirection(PlayerRot);
+
+                // gets planet object's world rotation and converts it to this object's local space
+                Vector3 PlatformRot = Planet.transform.rotation.eulerAngles;
+                transform.InverseTransformDirection(PlatformRot);
+
+                // sets players rotation to planet object rotation, without changing local y rotation
+                Vector3 NewPlayerRot = new Vector3(PlatformRot.x, PlayerRot.y, PlatformRot.z);
+                transform.TransformDirection(NewPlayerRot);
+                Quaternion NewRotQ = Quaternion.Euler(NewPlayerRot);
+                transform.SetPositionAndRotation(transform.position, NewRotQ);
+
+                //
+
+                // sets velocity to zero
                 rb.velocity = Vector3.zero;
 
                 // I believe that PlanetScript.PlanetGravity needs to be reversed now (by the - symbol) because it is flinging the player up, towards the new planet
                 // I added the gravityScale multiplier because i thought it made sense. keep an eye on it in case problems with planet changing occur
-                rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
+
+                // This isn't mario galaxy, so I don't need this.
+                //rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
 
 
                 PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
@@ -184,6 +212,7 @@ public class TutorialPlayer : MonoBehaviour
 
                 Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
 
+                // Change this to allign the player's feet to the planet's core.
                 Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
                 transform.rotation = toRotation;
 
@@ -191,7 +220,9 @@ public class TutorialPlayer : MonoBehaviour
 
                 // I believe that PlanetScript.PlanetGravity needs to be reversed now (by the - symbol) because it is flinging the player up, towards the new planet
                 // I added the gravityScale multiplier because i thought it made sense. keep an eye on it in case problems with planet changing occur
-                rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
+
+                // This isn't mario galaxy, so I dont need this.
+                //rb.AddForce(gravDirection * -PlanetScript.PlanetGravity);
 
 
                 PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
