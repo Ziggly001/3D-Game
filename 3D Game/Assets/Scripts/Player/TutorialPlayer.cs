@@ -21,6 +21,10 @@ public class TutorialPlayer : MonoBehaviour
     float distanceToGround;
     Vector3 Groundnormal;
 
+    Vector3 RotNormal;
+
+    // The player will allign themself to the closest normal with this mask. the core of the planet should be on this layer, and maybe floor planes too (add a plane to each floor, and assign that plane to this layer. since its a plane, the player won't turn sideways when they walk off it.)
+    public LayerMask OrbitRotMask;
 
 
     private Rigidbody rb;
@@ -103,11 +107,21 @@ public class TutorialPlayer : MonoBehaviour
 
         }
 
+        // Orbital rotation
 
-        //GRAVITY and ROTATION
+        RaycastHit OrbitRot = new RaycastHit();
+        if (Physics.Raycast(transform.position, -transform.up, out OrbitRot, 10, OrbitRotMask))
+        {
 
-        // Tests if the current planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
-        if (Planet.GetComponent<FlatGravity>() != null)
+            RotNormal = OrbitRot.normal;
+
+        }
+
+
+            //GRAVITY and ROTATION
+
+            // Tests if the current planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
+            if (Planet.GetComponent<FlatGravity>() != null)
         {
             // use flat gravity
 
@@ -136,9 +150,26 @@ public class TutorialPlayer : MonoBehaviour
 
             }
 
-            // Set player rotation to have feet facing the planet center here
-            //
-            //
+            // Set player rotation to have feet facing the planet center here ( or at least it would if it didn't make the game angry)
+            /*
+            // get planet position in local space
+            Vector3 PlanetRelative = Planet.transform.position;
+            transform.InverseTransformPoint(PlanetRelative);
+            // get local space direction between player and planet
+            PlanetRelative = PlanetRelative - transform.localPosition;
+            // set player's current y rotation to y component of the new rotation
+            PlanetRelative = new Vector3(PlanetRelative.x, transform.localRotation.eulerAngles.y, PlanetRelative.z);
+            // converts new rotation to world space
+            PlanetRelative = transform.TransformDirection(PlanetRelative);
+            // converts local forward to world space
+            Vector3 WorldSpaceForward = transform.TransformPoint(Vector3.forward);
+            // sets player rotation to correct rotation relative to planet
+            transform.rotation = Quaternion.LookRotation(PlanetRelative, WorldSpaceForward);
+            */
+
+            // Here I could have the player allign to the normal below them, but only if it has less than a 45 degree difference or some buffer like that.
+            Quaternion toRotation = Quaternion.FromToRotation(transform.up, RotNormal) * transform.rotation;
+            transform.rotation = toRotation;
         }
         //
 
