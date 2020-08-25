@@ -31,6 +31,12 @@ public class TutorialPlayer : MonoBehaviour
 
     private CustomGravity GravityScript;
 
+    public bool RotRayHit;
+
+    public Vector3 gravDirection;
+
+    public float gravChangeSpeed = 0.1f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -115,6 +121,14 @@ public class TutorialPlayer : MonoBehaviour
 
             RotNormal = OrbitRot.normal;
 
+            RotRayHit = true;
+
+        }
+        else
+        {
+
+            RotRayHit = false;
+
         }
 
 
@@ -141,7 +155,38 @@ public class TutorialPlayer : MonoBehaviour
         {
             // use planet gravity
 
-            Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+            // This is how gravity would be calculated if it didn't go off of the specified normals. I will still use this when the OrbitRot raycast doesn't hit anything.
+            //Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+
+            Vector3 oldGravDirection;
+
+            // use Vector3.Lerp to smooth between rotations and gravity directions (less jitter)
+
+            if (RotRayHit == true)
+            {
+
+                oldGravDirection = gravDirection;
+
+                //old (will probably keep)
+                gravDirection = (RotNormal).normalized;
+
+                //new (possibly broken)
+                //gravDirection = Vector3.Lerp(oldGravDirection, (RotNormal).normalized, gravChangeSpeed);
+
+                //Debug.Log("Raycast Hit!");
+
+            }
+            else
+            {
+                oldGravDirection = gravDirection;
+
+                //old (will probably keep)
+                gravDirection = (transform.position - Planet.transform.position).normalized;
+
+                //new (possibly broken)
+                //gravDirection = Vector3.Lerp(oldGravDirection, (transform.position - Planet.transform.position).normalized, gravChangeSpeed);
+            }
+
 
             if (OnGround == false)
             {
@@ -168,8 +213,12 @@ public class TutorialPlayer : MonoBehaviour
             */
 
             // Here I could have the player allign to the normal below them, but only if it has less than a 45 degree difference or some buffer like that.
+
+            //old
             Quaternion toRotation = Quaternion.FromToRotation(transform.up, RotNormal) * transform.rotation;
+
             transform.rotation = toRotation;
+
         }
         //
 
