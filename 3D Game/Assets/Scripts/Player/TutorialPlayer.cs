@@ -36,6 +36,12 @@ public class TutorialPlayer : MonoBehaviour
 
     public float gravChangeSpeed = 0.1f;
 
+    public bool InSpace = true;
+
+    public int gravFieldsTouching;
+
+    public LayerMask GravityField;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +49,10 @@ public class TutorialPlayer : MonoBehaviour
         rb.freezeRotation = true;
 
         GravityScript = this.GetComponent<CustomGravity>();
+
+        
+
+
     }
 
     // Adds the "Planet" class into this script's scope (?) (its basically initializing the "PlanetScript")
@@ -133,141 +143,205 @@ public class TutorialPlayer : MonoBehaviour
 
         //GRAVITY and ROTATION
 
-        // Tests if the current planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
-        if (Planet.GetComponent<FlatGravity>() != null)
+        // Only applies gravity if not in space
+        if (InSpace == false)
         {
-            // use flat gravity
 
-            //Vector3 gravDirection = Planet.transform.localRotation.eulerAngles;
-            Vector3 gravDirection = transform.up.normalized;
 
-            if (OnGround == false)
+
+            // Tests if the current planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
+            if (Planet.GetComponent<FlatGravity>() != null)
             {
-                // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
-                rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
+                // use flat gravity
 
-            }
-        }
-        else
-        {
-            // use planet gravity
+                //Vector3 gravDirection = Planet.transform.localRotation.eulerAngles;
+                Vector3 gravDirection = transform.up.normalized;
 
-            Vector3 oldGravDirection;
+                if (OnGround == false)
+                {
+                    // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
+                    rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
 
-            // use Vector3.Lerp to smooth between rotations and gravity directions (less jitter)
-
-            if (RotRayHit == true)
-            {
-
-                oldGravDirection = gravDirection;
-
-                //old (will probably keep)
-                gravDirection = (RotNormal).normalized;
-
-                //new (possibly broken)
-                //gravDirection = Vector3.Lerp(oldGravDirection, (RotNormal).normalized, gravChangeSpeed);
-
-                //Debug.Log("Raycast Hit!");
-
+                }
             }
             else
             {
-                oldGravDirection = gravDirection;
+                // use planet gravity
 
-                //old (will probably keep)
-                gravDirection = (transform.position - Planet.transform.position).normalized;
+                Vector3 oldGravDirection;
 
-                //new (possibly broken)
-                //gravDirection = Vector3.Lerp(oldGravDirection, (transform.position - Planet.transform.position).normalized, gravChangeSpeed);
+                // use Vector3.Lerp to smooth between rotations and gravity directions (less jitter)
+
+                if (RotRayHit == true)
+                {
+
+                    oldGravDirection = gravDirection;
+
+                    //old (will probably keep)
+                    gravDirection = (RotNormal).normalized;
+
+                    //new (possibly broken)
+                    //gravDirection = Vector3.Lerp(oldGravDirection, (RotNormal).normalized, gravChangeSpeed);
+
+                    //Debug.Log("Raycast Hit!");
+
+                    // Rotate based on normals
+                    // This method causes instant rotation change. It's unwanted but all I have.
+                    Quaternion toRotation = Quaternion.FromToRotation(transform.up, RotNormal) * transform.rotation;
+
+                    transform.rotation = toRotation;
+
+                }
+                else
+                {
+                    oldGravDirection = gravDirection;
+
+                    //old (will probably keep)
+                    gravDirection = (transform.position - Planet.transform.position).normalized;
+
+                    //new (possibly broken)
+                    //gravDirection = Vector3.Lerp(oldGravDirection, (transform.position - Planet.transform.position).normalized, gravChangeSpeed);
+
+                    // Rotate based on difference between player and planet rotation
+                    // setting rotation to gravDirection just made the player's rotation essentially 0, whatever, 0.
+                }
+
+
+                if (OnGround == false)
+                {
+                    // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
+                    rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
+
+                }
+
+
+                // Here I rotate the player
+
+                // used to rotate player here, but I now do different rotation if rotrayhit is false
+
             }
+            //
 
-
-            if (OnGround == false)
-            {
-                // thanks to using that PlanetScript GetComponent thing in Update, PlanetScript.PlanetGravity is referencing the current planet's gravity!
-                rb.AddForce(gravDirection * PlanetScript.PlanetGravity * GravityScript.gravityScale);
-
-            }
-
-            
-            // Here I rotate the player
-
-            // This method causes instant rotation change. It's unwanted but all I have.
-            Quaternion toRotation = Quaternion.FromToRotation(transform.up, RotNormal) * transform.rotation;
-
-            transform.rotation = toRotation;
+            // This code alligns the player to the normal below them. I don't want this, so I commented it out.
+            //Quaternion toRotation = Quaternion.FromToRotation(transform.up, Groundnormal) * transform.rotation;
+            //transform.rotation = toRotation;
 
         }
-        //
 
-        // This code alligns the player to the normal below them. I don't want this, so I commented it out.
-        //Quaternion toRotation = Quaternion.FromToRotation(transform.up, Groundnormal) * transform.rotation;
-        //transform.rotation = toRotation;
-
-
+        // SPACE PHYSICS
+        if (InSpace == true)
+        {
+            rb.velocity = Vector3.zero;
+        }
 
     }
+
 
 
     //CHANGE PLANET
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (collision.transform != Planet.transform)
+        // Checks if the collider is on the GravityField layer (basically; is it a gravity field?)
+        if (((1 << collision.gameObject.layer) & GravityField.value) != 0)
         {
-            // Tests if the new planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
-            if (collision.GetComponent<FlatGravity>() != null)
+            // Adds 1 to the gravFieldsTouching float upon entering a gravity field
+            gravFieldsTouching++;
+
+            // If touching multiple or 1 gravity fields, InSpace is false.
+            if (gravFieldsTouching > 1 || gravFieldsTouching == 1)
             {
-                // use flat gravity
-
-                Planet = collision.transform.gameObject;
-
-                // this might mess stuff up when you fly a ship to a flat gravity body, so I plan to comment it out.
-                Vector3 gravDirection = transform.up.normalized;
-
-
-                // alligns player to surface of flat thing
-                //
-                // takes player's world rotation and converts it to local
-                Vector3 PlayerRot = transform.rotation.eulerAngles;
-                transform.InverseTransformDirection(PlayerRot);
-
-                // gets planet object's world rotation and converts it to this object's local space
-                Vector3 PlatformRot = Planet.transform.rotation.eulerAngles;
-                transform.InverseTransformDirection(PlatformRot);
-
-                // sets players rotation to planet object rotation, without changing local y rotation
-                Vector3 NewPlayerRot = new Vector3(PlatformRot.x, PlayerRot.y, PlatformRot.z);
-                transform.TransformDirection(NewPlayerRot);
-                Quaternion NewRotQ = Quaternion.Euler(NewPlayerRot);
-                transform.SetPositionAndRotation(transform.position, NewRotQ);
-                //
-
-                // sets velocity to zero
-                rb.velocity = Vector3.zero;
-
-                // tutorial used this and I don't see a reason to remove it. Figured I won't tamper with it.
-                PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+                InSpace = false;
             }
-            else
+
+            // Continues if the collider isn't the current gravity field
+            if (collision.transform != Planet.transform)
             {
-                // use planet gravity
 
-                Planet = collision.transform.gameObject;
+                // Tests if the new planet has a "FlatGravity" component. If it does, then it uses flat gravity. else, it uses spherical gravity.
+                if (collision.GetComponent<FlatGravity>() != null)
+                {
+                    // use flat gravity
 
-                Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+                    Planet = collision.transform.gameObject;
 
-                // this would rotate the player to have their feet facing the planet's center upon entrance, but that would mess with players in ships.
-                //Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
-                //transform.rotation = toRotation;
-
-                rb.velocity = Vector3.zero;
+                    // this might mess stuff up when you fly a ship to a flat gravity body, so I plan to comment it out.
+                    Vector3 gravDirection = transform.up.normalized;
 
 
-                PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+                    // alligns player to surface of flat thing
+                    //
+                    // takes player's world rotation and converts it to local
+                    Vector3 PlayerRot = transform.rotation.eulerAngles;
+                    transform.InverseTransformDirection(PlayerRot);
+
+                    // gets planet object's world rotation and converts it to this object's local space
+                    Vector3 PlatformRot = Planet.transform.rotation.eulerAngles;
+                    transform.InverseTransformDirection(PlatformRot);
+
+                    // sets players rotation to planet object rotation, without changing local y rotation
+                    Vector3 NewPlayerRot = new Vector3(PlatformRot.x, PlayerRot.y, PlatformRot.z);
+                    transform.TransformDirection(NewPlayerRot);
+                    Quaternion NewRotQ = Quaternion.Euler(NewPlayerRot);
+                    transform.SetPositionAndRotation(transform.position, NewRotQ);
+                    //
+
+                    // sets velocity to zero
+                    rb.velocity = Vector3.zero;
+
+                    // tutorial used this and I don't see a reason to remove it. Figured I won't tamper with it.
+                    PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+                }
+                else
+                {
+                    // use planet gravity
+
+                    Planet = collision.transform.gameObject;
+
+                    Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+
+                    // this would rotate the player to have their feet facing the planet's center upon entrance, but that would mess with players in ships.
+                    //Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
+                    //transform.rotation = toRotation;
+
+                    rb.velocity = Vector3.zero;
+
+
+                    PlayerPlaceholder.GetComponent<TutorialPlayerPlaceholder>().NewPlanet(Planet);
+                }
+
             }
 
         }
+    }
+
+
+
+    private void OnTriggerExit(Collider collision)
+    {
+        // This if statement checks if the trigger's layer is the same as the mask layer. (same if statement as before)
+        if (((1 << collision.gameObject.layer) & GravityField.value) != 0)
+        {
+            // Removes 1 from the gravFieldsTouching float upon leaving a gravity field
+            gravFieldsTouching--;
+
+            if (gravFieldsTouching < 1)
+            {
+                // If not in any gravity fields, InSpace is true
+                InSpace = true;
+
+            }
+
+            if (InSpace == true)
+            {
+
+                rb.velocity = Vector3.zero;
+
+            }
+
+        }
+
+        
     }
 
 
