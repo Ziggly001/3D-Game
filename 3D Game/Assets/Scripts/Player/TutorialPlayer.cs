@@ -155,7 +155,33 @@ public class TutorialPlayer : MonoBehaviour
                 // use flat gravity
 
                 //Vector3 gravDirection = Planet.transform.localRotation.eulerAngles;
-                Vector3 gravDirection = transform.up.normalized;
+                //Vector3 gravDirection = transform.up.normalized;
+
+                if (RotRayHit == true)
+                {
+                    // Rotation and gravity based off normals
+                    gravDirection = (RotNormal).normalized;
+
+                    // This method causes instant rotation change. It's unwanted but all I have.
+                    Quaternion toRotation = Quaternion.FromToRotation(transform.up, RotNormal) * transform.rotation;
+                    transform.rotation = toRotation;
+                }
+                else
+                {
+                    // Sets player's rotation to grav body's rotation, excluding y axis
+                    // (Doesn't work; odd stuff happens when player attempts to rotate on y axis)
+                    /*
+                    Vector3 gravBodyRot = Planet.transform.rotation.eulerAngles;
+                    transform.InverseTransformDirection(gravBodyRot);
+                    Vector3 NewPlayerRot = new Vector3(gravBodyRot.x, transform.localEulerAngles.y, gravBodyRot.z);
+                    transform.TransformDirection(NewPlayerRot);
+                    Quaternion NewRotQ = Quaternion.Euler(NewPlayerRot);
+                    transform.rotation = NewRotQ;
+
+
+                    gravDirection = transform.up.normalized;
+                    */
+                }
 
                 if (OnGround == false)
                 {
@@ -231,7 +257,7 @@ public class TutorialPlayer : MonoBehaviour
         // SPACE PHYSICS
         if (InSpace == true)
         {
-            rb.velocity = Vector3.zero;
+            //rb.velocity = Vector3.zero;
         }
 
     }
@@ -266,9 +292,11 @@ public class TutorialPlayer : MonoBehaviour
                     Planet = collision.transform.gameObject;
 
                     // this might mess stuff up when you fly a ship to a flat gravity body, so I plan to comment it out.
-                    Vector3 gravDirection = transform.up.normalized;
+                    //Vector3 gravDirection = transform.up.normalized;
 
 
+                    // commented this out because I should only do this in update, and only if RotRayHit is false
+                    /*
                     // alligns player to surface of flat thing
                     //
                     // takes player's world rotation and converts it to local
@@ -285,6 +313,8 @@ public class TutorialPlayer : MonoBehaviour
                     Quaternion NewRotQ = Quaternion.Euler(NewPlayerRot);
                     transform.SetPositionAndRotation(transform.position, NewRotQ);
                     //
+                    */
+
 
                     // sets velocity to zero
                     rb.velocity = Vector3.zero;
@@ -298,7 +328,8 @@ public class TutorialPlayer : MonoBehaviour
 
                     Planet = collision.transform.gameObject;
 
-                    Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
+                    // commented out these statements setting gravDirection at OnTriggerEnter. they would mess up incoming ships.
+                    //Vector3 gravDirection = (transform.position - Planet.transform.position).normalized;
 
                     // this would rotate the player to have their feet facing the planet's center upon entrance, but that would mess with players in ships.
                     //Quaternion toRotation = Quaternion.FromToRotation(transform.up, gravDirection) * transform.rotation;
